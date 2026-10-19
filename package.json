@@ -1,0 +1,65 @@
+{
+    "name": "n8n-nodes-wapiflow",
+    "version": "0.1.0",
+    "description": "n8n community node for WapiFlow — send WhatsApp messages and receive events via your WapiFlow instance.",
+    "keywords": [
+        "n8n-community-node-package",
+        "n8n",
+        "wapiflow",
+        "whatsapp",
+        "whatsapp-api",
+        "evolution-api",
+        "messaging"
+    ],
+    "license": "MIT",
+    "homepage": "https://wapiflow.com",
+    "author": {
+        "name": "WapiFlow",
+        "email": "wapiadmin@webdescent.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/wapiflow/n8n-nodes-wapiflow.git"
+    },
+    "engines": {
+        "node": ">=20.15"
+    },
+    "main": "index.js",
+    "scripts": {
+        "build": "npx rimraf dist .tsbuildinfo && tsc && gulp build:icons",
+        "dev": "tsc --watch",
+        "format": "prettier nodes credentials --write",
+        "lint": "eslint nodes credentials package.json",
+        "lintfix": "eslint nodes credentials package.json --fix",
+        "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+    },
+    "files": [
+        "dist"
+    ],
+    "n8n": {
+        "n8nNodesApiVersion": 1,
+        "credentials": [
+            "dist/credentials/WapiFlowApi.credentials.js"
+        ],
+        "nodes": [
+            "dist/nodes/WapiFlow/WapiFlow.node.js",
+            "dist/nodes/WapiFlowTrigger/WapiFlowTrigger.node.js"
+        ]
+    },
+    "devDependencies": {
+        "@types/node": "^20.14.0",
+        "@typescript-eslint/eslint-plugin": "^7.15.0",
+        "@typescript-eslint/parser": "^7.15.0",
+        "eslint": "^8.57.0",
+        "eslint-plugin-n8n-nodes-base": "^1.16.3",
+        "gulp": "^5.0.0",
+        "jsonc-eslint-parser": "^3.3.0",
+        "n8n-workflow": "^1.60.0",
+        "prettier": "^3.3.2",
+        "rimraf": "^5.0.7",
+        "typescript": "^5.5.3"
+    },
+    "peerDependencies": {
+        "n8n-workflow": "*"
+    }
+}

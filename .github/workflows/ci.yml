@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Lint (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      # `isolated-vm` is pulled transitively by `n8n-workflow` but only needed
+      # at n8n runtime, not for building the community node. Skipping scripts
+      # avoids the native build and keeps CI fast on all platforms.
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: TypeScript build + icon copy
+        run: npm run build
+
+      - name: ESLint (dev ruleset)
+        run: npm run lint
+
+      - name: ESLint (prepublish ruleset — n8n verification)
+        run: npx eslint --config .eslintrc.prepublish.js nodes credentials package.json
+
+      - name: npm pack dry-run (verify tarball contents)
+        run: npm pack --dry-run

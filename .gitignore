@@ -1,0 +1,9 @@
+node_modules
+dist
+.DS_Store
+*.log
+.n8n
+.npmrc
+.vscode
+*.tsbuildinfo
+.tsbuildinfo

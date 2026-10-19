@@ -1,0 +1,44 @@
+name: Feature Request
+description: Suggest a new operation, resource, or improvement
+title: "[Feature] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please check the [roadmap in the README](../blob/main/README.md#roadmap) first — it may already be planned.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - New operation on existing resource (Message / Instance)
+        - New resource (Contact / Group / Drip / Campaign / etc.)
+        - New trigger event
+        - Credential / auth improvement
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What problem does this solve?
+      description: Describe the workflow or user story this would unlock
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed implementation
+      description: Which WapiFlow REST endpoint, which fields, which routing?
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

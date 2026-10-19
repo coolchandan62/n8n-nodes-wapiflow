@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: WapiFlow platform support
+    url: https://wapiflow.com/support
+    about: Issues with the WapiFlow dashboard, WhatsApp session, or API server (not the n8n node)
+  - name: n8n community forum
+    url: https://community.n8n.io
+    about: Questions about n8n itself (workflow design, nodes, etc.)

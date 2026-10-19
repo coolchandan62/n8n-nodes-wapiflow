@@ -1,0 +1,40 @@
+# Auto-update npm dependencies and GitHub Actions versions.
+# Grouped updates keep PR noise manageable for a small community package.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - npm
+    groups:
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@typescript-eslint/*"
+          - "jsonc-eslint-parser"
+      types:
+        patterns:
+          - "@types/*"
+      n8n:
+        patterns:
+          - "n8n-*"
+    ignore:
+      # n8n-workflow releases often; we only care about minor+major bumps.
+      - dependency-name: "n8n-workflow"
+        update-types: ["version-update:semver-patch"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+      - github-actions

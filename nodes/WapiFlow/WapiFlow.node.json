@@ -1,0 +1,21 @@
+{
+    "node": "n8n-nodes-base.wapiFlow",
+    "nodeVersion": "1.0",
+    "codexVersion": "1.0",
+    "categories": [
+        "Communication",
+        "Marketing"
+    ],
+    "resources": {
+        "credentialDocumentation": [
+            {
+                "url": "https://wapiflow.com/docs/n8n#credentials"
+            }
+        ],
+        "primaryDocumentation": [
+            {
+                "url": "https://wapiflow.com/docs/n8n"
+            }
+        ]
+    }
+}
