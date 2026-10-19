@@ -19,7 +19,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/wapiflow/n8n-nodes-wapiflow.git"
+        "url": "git+https://github.com/coolchandan62/n8n-nodes-wapiflow"
     },
     "engines": {
         "node": ">=20.15"
@@ -31,7 +31,9 @@
         "format": "prettier nodes credentials --write",
         "lint": "eslint nodes credentials package.json",
         "lintfix": "eslint nodes credentials package.json --fix",
-        "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+        "lint:prepublish": "eslint --config .eslintrc.prepublish.js nodes credentials package.json",
+        "prepublishOnly": "npm run build && npm run lint:prepublish",
+        "release": "n8n-node release"
     },
     "files": [
         "dist"
@@ -47,6 +49,7 @@
         ]
     },
     "devDependencies": {
+        "@n8n/node-cli": "^0.52.6",
         "@types/node": "^20.14.0",
         "@typescript-eslint/eslint-plugin": "^7.15.0",
         "@typescript-eslint/parser": "^7.15.0",

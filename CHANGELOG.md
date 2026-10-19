@@ -6,6 +6,15 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `@n8n/node-cli` (v0.52+) as devDependency — provides `n8n-node release` command
+- `.github/workflows/publish.yml` — automated npm publishing with provenance attestation (required for n8n Creator Portal verification from May 1, 2026)
+- `release` npm script wiring the Creator-Portal-compliant release flow
+- `lint:prepublish` npm script for the stricter n8n verification ruleset
+
+### Fixed
+- `prepublishOnly` script was mis-forwarding `-c` flag through `npm run lint`; replaced with a proper `lint:prepublish` script
+
 ### Planned
 - Message resource: buttons, lists, polls, contact card, location, reactions
 - Instance resource: QR fetch, logout, restart

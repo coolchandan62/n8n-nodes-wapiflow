@@ -37,7 +37,7 @@ jobs:
         run: npm run lint
 
       - name: ESLint (prepublish ruleset — n8n verification)
-        run: npx eslint --config .eslintrc.prepublish.js nodes credentials package.json
+        run: npm run lint:prepublish
 
       - name: npm pack dry-run (verify tarball contents)
         run: npm pack --dry-run

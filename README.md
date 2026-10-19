@@ -127,40 +127,59 @@ Open http://localhost:5678 → search the node palette for `WapiFlow` → done.
 
 ## Publishing (maintainers)
 
-### One-time
+Since **May 1, 2026** n8n requires all verified community nodes to be published via **GitHub Actions with npm provenance** — a cryptographic attestation that proves the package was built from a specific repo + commit. Publishing from a local machine is still allowed but blocks the Verified Badge.
+
+### One-time setup (per fresh clone)
+
+**1. Push the repo to GitHub** (public).
+
+**2. Configure npm Trusted Publishing** (no long-lived secrets, recommended):
+
+   1. Log in to [npmjs.com](https://www.npmjs.com) → package settings for `n8n-nodes-wapiflow`
+   2. **Publish access** → **Trusted Publishers** → **Add a publisher**
+   3. Select **GitHub Actions** and fill:
+      - Repository owner: `coolchandan62`
+      - Repository name: `n8n-nodes-wapiflow`
+      - Workflow name: `publish.yml`
+      - Environment: *(leave blank)*
+   4. Save — no `NPM_TOKEN` secret needed. GitHub's OIDC token handles auth.
+
+   *(Alternative:* create a Granular Access Token on npmjs.com → store as `NPM_TOKEN` repo secret → the workflow uses it as fallback.)
+
+### Each release (fully automated via `npm run release`)
 
 ```bash
-npm login
+# Interactive — bumps version, updates CHANGELOG, commits, tags, pushes
+npm run release
 ```
 
-### Each release
+What happens under the hood:
+1. **Locally:** `n8n-node release` runs lint + build sanity-check, then prompts for a version bump (patch/minor/major), updates `CHANGELOG.md`, creates a commit, tags it (e.g. `0.2.0`), and pushes both to GitHub.
+2. **GitHub Actions picks up the tag push** → `.github/workflows/publish.yml` runs → calls `npm run release` *again* in CI mode (detected via `GITHUB_ACTIONS` env var) → runs lint + build + `npm publish --provenance`.
+3. **npm page** shows the ✅ **"Published with provenance"** badge, cryptographically linked to the GitHub commit.
+
+### Dry-run / safety checks before releasing
 
 ```bash
-# Bump version
-npm version patch   # or minor / major
-
-# Build + lint with strict prepublish ruleset
 npm run build
-npm run lint -c .eslintrc.prepublish.js nodes credentials package.json
-
-# Dry-run to inspect the published tarball
-npm pack --dry-run
-
-# Publish
-npm publish --access public
-
-# Push tags
-git push --follow-tags
+npm run lint
+npm run lint:prepublish    # the exact ruleset n8n verification uses
+npm pack --dry-run         # see what will be shipped
 ```
 
-### Verified badge (for the n8n node palette ✓)
+### Verified Badge (unlocks the n8n Cloud nodes panel ✓)
 
-After the first stable release:
+Once at least one release is published via GitHub Actions with provenance:
 
-1. Open an issue on https://github.com/n8n-io/n8n titled `Verify community node: n8n-nodes-wapiflow`
-2. Fill the verification template (security contact, support URL, GitHub repo link, npm package link, screenshots)
-3. n8n team reviews code quality + package metadata; approval typically takes 1–2 weeks
-4. Once verified, the node is installable from n8n Cloud too (unverified community nodes are self-hosted only)
+1. Sign up at **[creators.n8n.io](https://creators.n8n.io)** (the Creator Portal; **the old GitHub issue flow is deprecated**)
+2. Submit `n8n-nodes-wapiflow` for verification
+3. n8n team reviews:
+   - Zero runtime dependencies (we have none ✅)
+   - Technical + UX guidelines
+   - README quality
+   - Provenance publishing (✅ if you followed the workflow above)
+   - MIT license (✅)
+4. Approval typically takes 1–2 weeks → shield icon 🛡️ appears in n8n UI, 1-click install enabled on n8n Cloud
 
 ---
 
