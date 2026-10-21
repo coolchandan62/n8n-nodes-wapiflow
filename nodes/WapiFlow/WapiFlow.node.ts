@@ -1,4 +1,7 @@
-import type { INodeType, INodeTypeDescription } from 'n8n-workflow';
+import {
+    type INodeType,
+    type INodeTypeDescription,
+} from 'n8n-workflow';
 
 /**
  * WapiFlow action node.
@@ -21,7 +24,10 @@ export class WapiFlow implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'WapiFlow',
         name: 'wapiFlow',
-        icon: 'file:wapiflow.svg',
+        icon: {
+            light: 'file:wapiflow.svg',
+            dark: 'file:wapiflow.svg',
+        },
         group: ['output'],
         version: 1,
         subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
@@ -31,6 +37,7 @@ export class WapiFlow implements INodeType {
         },
         inputs: ['main'],
         outputs: ['main'],
+        usableAsTool: true,
         credentials: [
             {
                 name: 'wapiFlowApi',

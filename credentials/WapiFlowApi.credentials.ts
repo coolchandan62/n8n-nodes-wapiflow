@@ -1,4 +1,5 @@
 import type {
+    Icon,
     IAuthenticateGeneric,
     ICredentialTestRequest,
     ICredentialType,
@@ -10,14 +11,16 @@ import type {
  * WhatsApp instance. The key is minted in the WapiFlow dashboard under
  * Developer → API Keys. Secrets are stored encrypted by n8n and never
  * exposed in workflow JSON exports.
- *
- * Authentication header format expected by WapiFlow:
- *   Authorization: Bearer wf_live_KEY:SECRET
  */
 export class WapiFlowApi implements ICredentialType {
     name = 'wapiFlowApi';
 
     displayName = 'WapiFlow API';
+
+    icon: Icon = {
+        light: 'file:wapiflow.svg',
+        dark: 'file:wapiflow.svg',
+    };
 
     documentationUrl = 'https://docs.n8n.io/integrations/credentials/wapiFlowApi/';
 
@@ -40,7 +43,7 @@ export class WapiFlowApi implements ICredentialType {
             default: '',
             placeholder: 'wf_live_xxxxxxxxxxxx',
             description:
-                'Generated under Developer → API Keys in your WapiFlow dashboard. Each key is bound to one WhatsApp instance.',
+                'Generated under Developer â†’ API Keys in your WapiFlow dashboard. Each key is bound to one WhatsApp instance.',
             required: true,
         },
         {
@@ -73,7 +76,7 @@ export class WapiFlowApi implements ICredentialType {
     /**
      * The "Test" button in the credential form calls this. We hit /me.php
      * which validates the key, returns the bound instance, and bumps the
-     * last_used_at timestamp — a safe no-op that proves everything works
+     * last_used_at timestamp â€” a safe no-op that proves everything works
      * end-to-end (network, auth, plan feature gating).
      */
     test: ICredentialTestRequest = {

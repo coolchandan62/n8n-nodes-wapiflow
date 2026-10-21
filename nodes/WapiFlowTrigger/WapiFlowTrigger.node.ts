@@ -1,9 +1,9 @@
-import type {
-    IDataObject,
-    INodeType,
-    INodeTypeDescription,
-    IWebhookFunctions,
-    IWebhookResponseData,
+import {
+    type IDataObject,
+    type INodeType,
+    type INodeTypeDescription,
+    type IWebhookFunctions,
+    type IWebhookResponseData,
 } from 'n8n-workflow';
 
 /**
@@ -26,9 +26,13 @@ export class WapiFlowTrigger implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'WapiFlow Trigger',
         name: 'wapiFlowTrigger',
-        icon: 'file:wapiflow.svg',
+        icon: {
+            light: 'file:wapiflow.svg',
+            dark: 'file:wapiflow.svg',
+        },
         group: ['trigger'],
         version: 1,
+        subtitle: 'Receive WhatsApp events',
         description: 'Starts a workflow when WapiFlow receives a WhatsApp event (new message, status update, etc.).',
         defaults: {
             name: 'WapiFlow Trigger',
