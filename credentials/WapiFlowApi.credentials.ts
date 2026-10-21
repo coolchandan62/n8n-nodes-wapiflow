@@ -26,8 +26,8 @@ export class WapiFlowApi implements ICredentialType {
             displayName: 'Base URL',
             name: 'baseUrl',
             type: 'string',
-            default: 'https://wapiflow.yoursite.com',
-            placeholder: 'https://wapiflow.yoursite.com',
+            default: 'https://wapiflow.webdescent.com',
+            placeholder: 'https://wapiflow.webdescent.com',
             description:
                 'Your WapiFlow installation URL without the trailing /api/v1. Example: https://wapi.acme.com.',
             required: true,
