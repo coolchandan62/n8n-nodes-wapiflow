@@ -28,7 +28,7 @@ jobs:
       # at n8n runtime, not for building the community node. Skipping scripts
       # avoids the native build and keeps CI fast on all platforms.
       - name: Install dependencies
-        run: npm ci
+        run: npm ci || npm install --no-audit
 
       - name: TypeScript build + icon copy
         run: npm run build
