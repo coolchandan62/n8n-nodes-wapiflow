@@ -1,5 +1,7 @@
 import {
+    NodeConnectionTypes,
     type IDataObject,
+    type IHookFunctions,
     type INodeType,
     type INodeTypeDescription,
     type IWebhookFunctions,
@@ -38,7 +40,7 @@ export class WapiFlowTrigger implements INodeType {
             name: 'WapiFlow Trigger',
         },
         inputs: [],
-        outputs: ['main'],
+        outputs: [NodeConnectionTypes.Main],
         // Credentials are optional for the trigger node — the webhook URL is
         // the auth boundary. Keep it visible so users can still mark the
         // workflow as "WapiFlow-related" in their credentials picker.
@@ -108,6 +110,20 @@ export class WapiFlowTrigger implements INodeType {
                     'Whether to drop messages the account sent itself (fromMe=true). Keep on to react only to what contacts write to you.',
             },
         ],
+    };
+
+    webhookMethods = {
+        default: {
+            async checkExists(this: IHookFunctions): Promise<boolean> {
+                return true;
+            },
+            async create(this: IHookFunctions): Promise<boolean> {
+                return true;
+            },
+            async delete(this: IHookFunctions): Promise<boolean> {
+                return true;
+            },
+        },
     };
 
     async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {

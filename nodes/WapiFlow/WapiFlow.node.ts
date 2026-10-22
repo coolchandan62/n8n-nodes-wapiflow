@@ -1,4 +1,5 @@
 import {
+    NodeConnectionTypes,
     type INodeType,
     type INodeTypeDescription,
 } from 'n8n-workflow';
@@ -35,8 +36,8 @@ export class WapiFlow implements INodeType {
         defaults: {
             name: 'WapiFlow',
         },
-        inputs: ['main'],
-        outputs: ['main'],
+        inputs: [NodeConnectionTypes.Main],
+        outputs: [NodeConnectionTypes.Main],
         usableAsTool: true,
         credentials: [
             {
