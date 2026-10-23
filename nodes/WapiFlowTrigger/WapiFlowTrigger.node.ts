@@ -75,29 +75,29 @@ export class WapiFlowTrigger implements INodeType {
                     'Which WapiFlow events this workflow should react to. Other events will still hit the webhook but are dropped silently.',
                 options: [
                     {
-                        name: 'Connection State (CONNECTION_UPDATE)',
+                        name: 'Connection State Changed',
                         value: 'CONNECTION_UPDATE',
-                        description: 'WhatsApp connection changed state (open / connecting / close)',
+                        description: 'Triggers when WhatsApp connection changes state (open, connecting, close)',
                     },
                     {
-                        name: 'Message Status (MESSAGES_UPDATE)',
-                        value: 'MESSAGES_UPDATE',
-                        description: 'A message changed delivery status (sent → delivered → read)',
-                    },
-                    {
-                        name: 'New Message (MESSAGES_UPSERT)',
-                        value: 'MESSAGES_UPSERT',
-                        description: 'An inbound or outbound message arrived or was echoed',
-                    },
-                    {
-                        name: 'Outbound Sent (SEND_MESSAGE)',
+                        name: 'Message Sent (Outbound)',
                         value: 'SEND_MESSAGE',
-                        description: 'Your account sent a message (via API or Chat)',
+                        description: 'Triggers when a message is sent from your instance (via API or chat)',
                     },
                     {
-                        name: 'QR Code Updated (QRCODE_UPDATED)',
+                        name: 'Message Status Changed',
+                        value: 'MESSAGES_UPDATE',
+                        description: 'Triggers when a message changes delivery status (sent, delivered, read)',
+                    },
+                    {
+                        name: 'New Message Received',
+                        value: 'MESSAGES_UPSERT',
+                        description: 'Triggers when a new WhatsApp message is received or echoed',
+                    },
+                    {
+                        name: 'QR Code Updated',
                         value: 'QRCODE_UPDATED',
-                        description: 'A new QR code is available for pairing',
+                        description: 'Triggers when a new QR code is available for device pairing',
                     },
                 ],
             },
