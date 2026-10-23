@@ -127,14 +127,17 @@ export class WapiFlowTrigger implements INodeType {
     };
 
     async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
-        const body = this.getBodyData() as IDataObject;
-        const allowedEvents = this.getNodeParameter('events', []) as string[];
+        const body = (this.getBodyData() ?? {}) as IDataObject;
+        const allowedEvents = (this.getNodeParameter('events', []) as string[]).map((e) =>
+            e.toUpperCase().replace(/[.-]/g, '_').trim(),
+        );
         const inboundOnly = this.getNodeParameter('inboundOnly', true) as boolean;
 
-        const event = String(body.event ?? '').toUpperCase();
+        const rawEvent = String(body.event ?? body.type ?? '').trim();
+        const event = rawEvent.toUpperCase().replace(/[.-]/g, '_').trim();
 
         // Drop events the user didn't opt into
-        if (allowedEvents.length > 0 && !allowedEvents.includes(event)) {
+        if (event && allowedEvents.length > 0 && !allowedEvents.includes(event)) {
             return {
                 webhookResponse: { ok: true, filtered: true, reason: 'event not subscribed' },
                 workflowData: [[]],
@@ -142,10 +145,10 @@ export class WapiFlowTrigger implements INodeType {
         }
 
         // Drop our own outbound echoes when inboundOnly is on and the event is MESSAGES_UPSERT
-        if (inboundOnly && event === 'MESSAGES_UPSERT') {
+        if (inboundOnly && (event === 'MESSAGES_UPSERT' || !event)) {
             const data = (body.data ?? {}) as IDataObject;
             const key = (data.key ?? {}) as IDataObject;
-            if (key.fromMe === true) {
+            if (key.fromMe === true || body.fromMe === true) {
                 return {
                     webhookResponse: { ok: true, filtered: true, reason: 'fromMe=true' },
                     workflowData: [[]],
