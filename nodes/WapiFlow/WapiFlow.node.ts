@@ -46,7 +46,7 @@ export class WapiFlow implements INodeType {
             },
         ],
         requestDefaults: {
-            baseURL: '={{$credentials.baseUrl.replace(/\\/$/, "")}}/api/v1',
+            baseURL: '={{$credentials.baseUrl.replace(/\\/$/, "").replace(/\\/api\\/v1$/, "")}}/api/v1',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',

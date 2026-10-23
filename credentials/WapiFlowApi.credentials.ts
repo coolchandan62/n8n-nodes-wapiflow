@@ -22,7 +22,7 @@ export class WapiFlowApi implements ICredentialType {
         dark: 'file:wapiflow.svg',
     };
 
-    documentationUrl = 'https://docs.n8n.io/integrations/credentials/wapiFlowApi/';
+    documentationUrl = 'https://wapiflow.com/docs/n8n#credentials';
 
     properties: INodeProperties[] = [
         {
@@ -39,11 +39,11 @@ export class WapiFlowApi implements ICredentialType {
             displayName: 'API Key',
             name: 'apiKey',
             type: 'string',
-												typeOptions: { password: true },
+            typeOptions: { password: true },
             default: '',
             placeholder: 'wf_live_xxxxxxxxxxxx',
             description:
-                'Generated under Developer â†’ API Keys in your WapiFlow dashboard. Each key is bound to one WhatsApp instance.',
+                'Generated under Developer -> API Keys in your WapiFlow dashboard. Each key is bound to one WhatsApp instance.',
             required: true,
         },
         {
@@ -76,12 +76,12 @@ export class WapiFlowApi implements ICredentialType {
     /**
      * The "Test" button in the credential form calls this. We hit /me.php
      * which validates the key, returns the bound instance, and bumps the
-     * last_used_at timestamp â€” a safe no-op that proves everything works
+     * last_used_at timestamp -- a safe no-op that proves everything works
      * end-to-end (network, auth, plan feature gating).
      */
     test: ICredentialTestRequest = {
         request: {
-            baseURL: '={{$credentials.baseUrl.replace(/\\/$/, "")}}/api/v1',
+            baseURL: '={{$credentials.baseUrl.replace(/\\/$/, "").replace(/\\/api\\/v1$/, "")}}/api/v1',
             url: '/me.php',
             method: 'GET',
         },

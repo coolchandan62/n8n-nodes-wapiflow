@@ -61,7 +61,7 @@ export class WapiFlowTrigger implements INodeType {
         properties: [
             {
                 displayName:
-                    'Copy the <strong>Production URL</strong> above into WapiFlow dashboard → Instances → Webhook events. Tick the events you selected below and <strong>Save</strong>.',
+                    'For active workflows, copy the <strong>Production URL</strong> above into WapiFlow dashboard -> Instances -> Webhook events. When testing via "Listen for Test Event", copy the <strong>Test URL</strong> instead. Tick the events you selected below and <strong>Save</strong>.',
                 name: 'setupNotice',
                 type: 'notice',
                 default: '',
@@ -146,9 +146,10 @@ export class WapiFlowTrigger implements INodeType {
 
         // Drop our own outbound echoes when inboundOnly is on and the event is MESSAGES_UPSERT
         if (inboundOnly && (event === 'MESSAGES_UPSERT' || !event)) {
-            const data = (body.data ?? {}) as IDataObject;
+            const rawData = body.data;
+            const data = (Array.isArray(rawData) ? rawData[0] : rawData ?? {}) as IDataObject;
             const key = (data.key ?? {}) as IDataObject;
-            if (key.fromMe === true || body.fromMe === true) {
+            if (key.fromMe === true || body.fromMe === true || data.fromMe === true) {
                 return {
                     webhookResponse: { ok: true, filtered: true, reason: 'fromMe=true' },
                     workflowData: [[]],

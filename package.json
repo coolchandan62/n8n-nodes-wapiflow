@@ -19,7 +19,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/coolchandan62/n8n-nodes-wapiflow"
+        "url": "git+https://github.com/coolchandan62/n8n-nodes-wapiflow.git"
     },
     "engines": {
         "node": ">=20.15"
