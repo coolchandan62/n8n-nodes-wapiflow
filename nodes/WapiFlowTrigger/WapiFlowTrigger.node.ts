@@ -157,6 +157,23 @@ export class WapiFlowTrigger implements INodeType {
             }
         }
 
+        // Convenience shortcuts for easier mapping in n8n workflows
+        const rawDataForHelper = body.data;
+        const dataObj = (Array.isArray(rawDataForHelper) ? rawDataForHelper[0] : rawDataForHelper ?? {}) as IDataObject;
+        const msgObj = (dataObj.message ?? {}) as IDataObject;
+        const extMsg = (msgObj.extendedTextMessage ?? {}) as IDataObject;
+        const keyObj = (dataObj.key ?? {}) as IDataObject;
+
+        const extractedText = String(msgObj.conversation ?? extMsg.text ?? msgObj.caption ?? '');
+        const extractedSender = String(keyObj.remoteJid ?? body.sender ?? '').replace(/@s\\.whatsapp\\.net|@g\\.us/g, '');
+
+        if (extractedText && !body.messageText) {
+            body.messageText = extractedText;
+        }
+        if (extractedSender && !body.senderPhone) {
+            body.senderPhone = extractedSender;
+        }
+
         return {
             webhookResponse: { ok: true },
             workflowData: [this.helpers.returnJsonArray(body)],
