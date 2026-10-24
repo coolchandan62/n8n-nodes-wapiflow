@@ -5,7 +5,7 @@
 
 Official n8n community node for [WapiFlow](https://wapiflow.com) — send WhatsApp messages and react to inbound events from your self-hosted WapiFlow installation without writing a line of code.
 
-> **This repo is the scaffold.** V0.1 ships one credential, one action node (Send Text / Send Media / Get Status / Verify Credentials / List Instances) and one trigger node. Additional operations (buttons, lists, polls, contacts, groups, etc.) can be bolted on by following the pattern in `nodes/WapiFlow/WapiFlow.node.ts`.
+> Official community node: credentials, an action node (text, media, buttons, location, contact, poll, status, instances) and a webhook trigger. Extra Evolution endpoints can still be called via n8n HTTP Request against `/api/v1/whatsapp/*.php`.
 
 ---
 
@@ -49,11 +49,19 @@ npm install n8n-nodes-wapiflow
 
 | Resource | Operation | What it does |
 |---|---|---|
-| Message | Send Text | POST a plain-text WhatsApp message |
-| Message | Send Media | POST a media message from a public URL with optional caption |
-| Message | Get Status | GET delivery status (`queued` / `sent` / `delivered` / `read` / `failed`) by message id |
+| Message | Send Text | POST a plain-text WhatsApp message (`/messages.php`) |
+| Message | Send Media | POST image / video / audio / document from a public URL (`/messages.php`) |
+| Message | Send Buttons | POST up to 3 quick-reply buttons (`/whatsapp/sendButtons.php`) |
+| Message | Send Location | POST a map pin with name + address (`/whatsapp/sendLocation.php`) |
+| Message | Send Contact | POST one or more contact cards (`/whatsapp/sendContact.php`) |
+| Message | Send Poll | POST a poll with 2–12 choices (`/whatsapp/sendPoll.php`) |
+| Message | Get Status | GET delivery status of a `messages.php` send by message id |
 | Instance | Verify Credentials | GET `/me.php` — confirms the key and returns the bound instance |
 | Instance | List | GET `/instances.php` — lists all tenant instances with connection status |
+
+Button taps come back on the trigger as `buttonsResponseMessage` (use the button **ID**). Poll answers arrive as `pollUpdateMessage`.
+
+**Note:** Buttons / location / contact / poll go through WhatsApp directly and are **not** stored in the WapiFlow chat inbox (same as the dashboard API). Text and media sent via Send Text / Send Media **are** stored.
 
 Credentials are injected automatically via the `Authorization: Bearer KEY:SECRET` header. No manual header plumbing.
 
@@ -185,7 +193,8 @@ Once at least one release is published via GitHub Actions with provenance:
 
 ## Roadmap
 
-- [ ] Buttons / List / Poll / Location / Contact send operations
+- [x] Buttons / Poll / Location / Contact send operations
+- [ ] List messages (WhatsApp has largely deprecated them)
 - [ ] Contact resource (find, create, update)
 - [ ] Trigger auto-registration via WapiFlow API (no manual webhook URL copy)
 - [ ] Group operations (create, participants, info)
