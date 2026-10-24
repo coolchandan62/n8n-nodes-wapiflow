@@ -2,6 +2,7 @@ import {
     NodeConnectionTypes,
     type IExecuteSingleFunctions,
     type IHttpRequestOptions,
+    type INodeExecutionData,
     type INodeType,
     type INodeTypeDescription,
 } from 'n8n-workflow';
@@ -75,6 +76,30 @@ async function preSendPoll(
     return requestOptions;
 }
 
+async function postReceiveDecryptMedia(
+    this: IExecuteSingleFunctions,
+    items: INodeExecutionData[],
+): Promise<INodeExecutionData[]> {
+    for (const item of items) {
+        const json = (item.json ?? {}) as Record<string, unknown>;
+        const payload =
+            json.data && typeof json.data === 'object'
+                ? (json.data as Record<string, unknown>)
+                : json;
+        const base64 = String(payload.base64 ?? '');
+        if (base64 === '') {
+            continue;
+        }
+        const filename = String(payload.filename ?? 'file');
+        const mime = String(payload.mime ?? 'application/octet-stream');
+        item.binary = {
+            ...(item.binary ?? {}),
+            data: await this.helpers.prepareBinaryData(Buffer.from(base64, 'base64'), filename, mime),
+        };
+    }
+    return items;
+}
+
 /**
  * WapiFlow action node.
  *
@@ -103,7 +128,8 @@ export class WapiFlow implements INodeType {
         group: ['output'],
         version: 1,
         subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-        description: 'Send WhatsApp messages and manage instances via your WapiFlow installation.',
+        description:
+            'Send WhatsApp text, media, buttons, polls, location and contacts, decrypt inbound media, and check instance status via your WapiFlow installation.',
         defaults: {
             name: 'WapiFlow',
         },
@@ -134,14 +160,18 @@ export class WapiFlow implements INodeType {
                 name: 'resource',
                 type: 'options',
                 noDataExpression: true,
+                description: 'Message = send or decrypt WhatsApp content. Instance = credentials and session list.',
                 options: [
-                    {
-                        name: 'Message',
-                        value: 'message',
-                    },
                     {
                         name: 'Instance',
                         value: 'instance',
+                        description: 'Check API credentials and list WhatsApp instances',
+                    },
+                    {
+                        name: 'Message',
+                        value: 'message',
+                        description:
+                            'Send WhatsApp messages or decrypt a received voice note / image / video / document',
                     },
                 ],
                 default: 'message',
@@ -155,12 +185,31 @@ export class WapiFlow implements INodeType {
                 name: 'operation',
                 type: 'options',
                 noDataExpression: true,
+                description:
+                    'What to do. Send Text/Media are saved in the inbox. Buttons, poll, location and contact go to WhatsApp only. Decrypt Media turns an inbound voice/image into a file.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
                     },
                 },
                 options: [
+                    {
+                        name: 'Decrypt Media',
+                        value: 'decryptMedia',
+                        action: 'Decrypt inbound media',
+                        description:
+                            'Download a received voice note, image, video or document as a file. Use this instead of the encrypted WhatsApp URL from the webhook.',
+                        routing: {
+                            request: {
+                                method: 'POST',
+                                url: '/media.php',
+                                timeout: 30000,
+                            },
+                            output: {
+                                postReceive: [postReceiveDecryptMedia],
+                            },
+                        },
+                    },
                     {
                         name: 'Get Status',
                         value: 'getStatus',
@@ -257,6 +306,62 @@ export class WapiFlow implements INodeType {
                 ],
                 default: 'sendText',
             },
+            {
+                displayName:
+                    '<strong>Send Text</strong> stores the message in your WapiFlow inbox. Use expressions like <code>{{$json.senderPhone}}</code> from a WapiFlow Trigger. Formatting: *bold* _italic_ ~strike~ ```mono```.',
+                name: 'helpSendText',
+                type: 'notice',
+                default: '',
+                displayOptions: { show: { resource: ['message'], operation: ['sendText'] } },
+            },
+            {
+                displayName:
+                    '<strong>Send Media</strong> needs a public http(s) URL (Google Drive / Dropbox direct links often fail). WapiFlow downloads the file and sends it. Stored in the inbox. For inbound files use <strong>Decrypt Media</strong> — do not re-send the encrypted WhatsApp URL.',
+                name: 'helpSendMedia',
+                type: 'notice',
+                default: '',
+                displayOptions: { show: { resource: ['message'], operation: ['sendMedia'] } },
+            },
+            {
+                displayName:
+                    '<strong>Send Buttons</strong> — max 3 quick-reply buttons. When the user taps one, the Trigger receives <code>buttonsResponseMessage</code>; branch on the button <strong>ID</strong>. Not stored in the WapiFlow chat inbox.',
+                name: 'helpSendButtons',
+                type: 'notice',
+                default: '',
+                displayOptions: { show: { resource: ['message'], operation: ['sendButtons'] } },
+            },
+            {
+                displayName:
+                    '<strong>Send Location</strong> drops a map pin. WhatsApp requires both <strong>Place Name</strong> and <strong>Address</strong> or the send fails. Not stored in the WapiFlow inbox.',
+                name: 'helpSendLocation',
+                type: 'notice',
+                default: '',
+                displayOptions: { show: { resource: ['message'], operation: ['sendLocation'] } },
+            },
+            {
+                displayName:
+                    '<strong>Send Contact</strong> shares a vCard. <strong>WhatsApp Number</strong> must be digits with country code (e.g. 919876543210). Display Number is optional formatting. Not stored in the WapiFlow inbox.',
+                name: 'helpSendContact',
+                type: 'notice',
+                default: '',
+                displayOptions: { show: { resource: ['message'], operation: ['sendContact'] } },
+            },
+            {
+                displayName:
+                    '<strong>Send Poll</strong> needs 2-12 choices. Answers arrive on the Trigger as <code>pollUpdateMessage</code>. Not stored in the WapiFlow inbox.',
+                name: 'helpSendPoll',
+                type: 'notice',
+                default: '',
+                displayOptions: { show: { resource: ['message'], operation: ['sendPoll'] } },
+            },
+            {
+                displayName:
+                    '<strong>Get Status</strong> only tracks <strong>Send Text</strong> / <strong>Send Media</strong> (they return <code>message_id</code>). Button, poll, location and contact sends have no inbox status row.',
+                name: 'helpGetStatus',
+                type: 'notice',
+                default: '',
+                displayOptions: { show: { resource: ['message'], operation: ['getStatus'] } },
+            },
 
             // ---- Send Text / Send Media shared field: To ----
             {
@@ -266,8 +371,7 @@ export class WapiFlow implements INodeType {
                 required: true,
                 default: '',
                 placeholder: '919876543210',
-                description:
-                    'Destination phone number with country code (digits only). Example: 919876543210. Indian 10-digit mobiles get the 91 prefix added automatically.',
+                description: 'Recipient WhatsApp number, digits only with country code (e.g. 919876543210). Indian 10-digit mobiles get 91 added automatically. From a Trigger use {{$JSON.senderPhone}}.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -290,8 +394,7 @@ export class WapiFlow implements INodeType {
                 required: true,
                 default: '',
                 placeholder: '919876543210',
-                description:
-                    'Destination phone number with country code (digits only). Example: 919876543210. Indian 10-digit mobiles get the 91 prefix added automatically.',
+                description: 'Recipient WhatsApp number, digits only with country code (e.g. 919876543210). Indian 10-digit mobiles get 91 added automatically. From a Trigger use {{$JSON.senderPhone}}.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -316,8 +419,7 @@ export class WapiFlow implements INodeType {
                 typeOptions: {
                     rows: 4,
                 },
-                description:
-                    'The text to send. Supports *bold*, _italic_, ~strike~ and ```mono``` formatting.',
+                description: 'Message body shown in WhatsApp. Supports *bold*, _italic_, ~strike~ and ```mono```. From a Trigger you can reply with {{$JSON.messageText}}.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -341,7 +443,7 @@ export class WapiFlow implements INodeType {
                 default: '',
                 placeholder: 'https://example.com/brochure.pdf',
                 description:
-                    'Public http(s) URL of the file. WapiFlow will download it, infer the mime type and deliver it to WhatsApp.',
+                    'Public http(s) URL WapiFlow can download (must not require login). PDF, JPG, PNG, MP4, MP3, OGG work best. Do not paste mmg.whatsapp.net encrypted URLs.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -366,7 +468,7 @@ export class WapiFlow implements INodeType {
                     rows: 2,
                 },
                 description:
-                    'Optional caption shown with the media. For documents, it appears above the preview.',
+                    'Optional text shown with the file. On documents it appears above the preview. Leave blank for media-only.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -388,7 +490,7 @@ export class WapiFlow implements INodeType {
                 type: 'options',
                 default: 'auto',
                 description:
-                    'How the media is delivered. "Auto-detect" infers from the mime type (recommended).',
+                    'How WhatsApp should render the file. Leave Auto-Detect unless the URL has a wrong or missing file extension.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -421,7 +523,7 @@ export class WapiFlow implements INodeType {
                 required: true,
                 default: '',
                 placeholder: 'Confirm your appointment',
-                description: 'Header title shown above the buttons',
+                description: 'Bold header on the button card (e.g. Confirm your appointment)',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -443,7 +545,7 @@ export class WapiFlow implements INodeType {
                 typeOptions: {
                     rows: 2,
                 },
-                description: 'Optional body text under the title',
+                description: 'Optional body under the title (date, amount, short instructions)',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -462,7 +564,7 @@ export class WapiFlow implements INodeType {
                 name: 'buttonFooter',
                 type: 'string',
                 default: '',
-                description: 'Optional small footer line at the bottom',
+                description: 'Optional small footer (business name). WhatsApp shows it under the buttons.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -485,7 +587,8 @@ export class WapiFlow implements INodeType {
                 typeOptions: {
                     multipleValues: true,
                 },
-                description: 'Up to 3 quick-reply buttons. Each tap returns the button ID to your webhook.',
+                description:
+                    'Add 1-3 buttons. Label is what the user sees; ID is what your workflow receives when they tap. Empty ID becomes a slug of the label (Confirm → confirm).',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -503,7 +606,8 @@ export class WapiFlow implements INodeType {
                                 type: 'string',
                                 default: '',
                                 placeholder: 'btn_confirm',
-                                description: 'Value returned when the user taps this button. Leave blank to generate from the label.',
+                                description:
+                                    'Stable key for IF nodes (e.g. btn_confirm). Keep it unique. Leave blank to auto-generate from the label.',
                             },
                             {
                                 displayName: 'Label',
@@ -511,7 +615,7 @@ export class WapiFlow implements INodeType {
                                 type: 'string',
                                 default: '',
                                 placeholder: 'Confirm',
-                                description: 'Text shown on the button',
+                                description: 'Short label on the button (WhatsApp truncates long text)',
                             },
                         ],
                     },
@@ -525,7 +629,7 @@ export class WapiFlow implements INodeType {
                 type: 'number',
                 required: true,
                 default: 0,
-                description: 'GPS latitude of the pin in decimal degrees (-90 to 90)',
+                description: 'Pin latitude in decimal degrees, e.g. 28.6139 for New Delhi. Range -90 to 90.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -545,7 +649,7 @@ export class WapiFlow implements INodeType {
                 type: 'number',
                 required: true,
                 default: 0,
-                description: 'GPS longitude of the pin in decimal degrees (-180 to 180)',
+                description: 'Pin longitude in decimal degrees, e.g. 77.2090 for New Delhi. Range -180 to 180.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -566,7 +670,7 @@ export class WapiFlow implements INodeType {
                 required: true,
                 default: '',
                 placeholder: 'WapiFlow Office',
-                description: 'Place name shown as the pin title. WhatsApp requires it.',
+                description: 'Title on the pin (shop / office name). Required by WhatsApp — empty name fails the send.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -587,7 +691,7 @@ export class WapiFlow implements INodeType {
                 required: true,
                 default: '',
                 placeholder: 'Connaught Place, New Delhi',
-                description: 'Address line shown under the place name. WhatsApp requires it.',
+                description: 'Street / area shown under the title. Required by WhatsApp — empty address fails the send.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -612,7 +716,8 @@ export class WapiFlow implements INodeType {
                 typeOptions: {
                     multipleValues: true,
                 },
-                description: 'Contact card(s) to share. WhatsApp number is digits only.',
+                description:
+                    'One or more contact cards. WhatsApp Number = digits with country code. Full Name is what the recipient sees.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -630,7 +735,7 @@ export class WapiFlow implements INodeType {
                                 type: 'string',
                                 default: '',
                                 placeholder: '+91 90138 41418',
-                                description: 'Formatted number shown on the card. Defaults to the WhatsApp number when blank.',
+                                description: 'Pretty number on the card (e.g. +91 90138 41418). Blank = WhatsApp Number.',
                             },
                             {
                                 displayName: 'Full Name',
@@ -638,7 +743,7 @@ export class WapiFlow implements INodeType {
                                 type: 'string',
                                 default: '',
                                 placeholder: 'Chandan Singh',
-                                description: 'Display name on the contact card',
+                                description: 'Name shown on the contact card (required)',
                             },
                             {
                                 displayName: 'WhatsApp Number',
@@ -646,7 +751,7 @@ export class WapiFlow implements INodeType {
                                 type: 'string',
                                 default: '',
                                 placeholder: '919013841418',
-                                description: 'WhatsApp number, digits only with country code',
+                                description: 'WhatsApp ID, digits only (e.g. 919013841418). Spaces and + are stripped.',
                             },
                         ],
                     },
@@ -661,7 +766,7 @@ export class WapiFlow implements INodeType {
                 required: true,
                 default: '',
                 placeholder: 'Which delivery slot works for you?',
-                description: 'The poll question shown at the top',
+                description: 'Question shown at the top of the poll (e.g. Which delivery slot works for you?)',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -684,7 +789,7 @@ export class WapiFlow implements INodeType {
                 typeOptions: {
                     multipleValues: true,
                 },
-                description: 'Poll answer choices (2-12). Voters pick from these.',
+                description: 'Add 2-12 answer rows. WhatsApp rejects polls with fewer than 2 choices.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -702,7 +807,7 @@ export class WapiFlow implements INodeType {
                                 type: 'string',
                                 default: '',
                                 placeholder: 'Morning 9-12',
-                                description: 'One answer choice',
+                                description: 'One option the recipient can vote for',
                             },
                         ],
                     },
@@ -717,7 +822,7 @@ export class WapiFlow implements INodeType {
                     minValue: 1,
                     maxValue: 12,
                 },
-                description: 'How many choices a voter may select at once',
+                description: 'How many options one voter can pick. Use 1 for single-choice polls.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -732,6 +837,92 @@ export class WapiFlow implements INodeType {
                 },
             },
 
+            // ---- Decrypt Media ----
+            {
+                displayName:
+                    '<strong>Decrypt Media</strong> — do not download <code>audioMessage.url</code> (it is encrypted). After a Trigger, set Lookup to WhatsApp Message ID and map <code>data.key.ID</code>. Output: binary <code>data</code> (Write Binary File) plus JSON base64. Chat copies stay on the server until Media retention.',
+                name: 'decryptNotice',
+                type: 'notice',
+                default: '',
+                displayOptions: {
+                    show: {
+                        resource: ['message'],
+                        operation: ['decryptMedia'],
+                    },
+                },
+            },
+            {
+                displayName: 'Lookup',
+                name: 'mediaLookup',
+                type: 'options',
+                default: 'provider',
+                description:
+                    'WhatsApp Message ID is easiest from the Trigger (data.key.ID). Use WapiFlow Message ID only if you already stored the row in the inbox.',
+                displayOptions: {
+                    show: {
+                        resource: ['message'],
+                        operation: ['decryptMedia'],
+                    },
+                },
+                options: [
+                    {
+                        name: 'WapiFlow Message ID',
+                        value: 'wapi',
+                        description: 'Numeric ID from the WapiFlow messages table',
+                    },
+                    {
+                        name: 'WhatsApp Message ID',
+                        value: 'provider',
+                        description: 'Data.key.ID from the inbound webhook (recommended)',
+                    },
+                ],
+            },
+            {
+                displayName: 'WhatsApp Message ID',
+                name: 'providerMessageId',
+                type: 'string',
+                required: true,
+                default: '',
+                placeholder: '3EB0C43F64FDB1FA5E20',
+                description:
+                    'WhatsApp Message ID from the webhook payload (data.key.ID). Required unless you use WapiFlow Message ID.',
+                displayOptions: {
+                    show: {
+                        resource: ['message'],
+                        operation: ['decryptMedia'],
+                        mediaLookup: ['provider'],
+                    },
+                },
+                routing: {
+                    send: {
+                        type: 'body',
+                        property: 'provider_message_id',
+                    },
+                },
+            },
+            {
+                displayName: 'WapiFlow Message ID',
+                name: 'decryptMessageId',
+                type: 'number',
+                required: true,
+                default: 0,
+                description:
+                    'Inbox row ID after WapiFlow stored the inbound media. Use this if you do not have the WhatsApp Message ID.',
+                displayOptions: {
+                    show: {
+                        resource: ['message'],
+                        operation: ['decryptMedia'],
+                        mediaLookup: ['wapi'],
+                    },
+                },
+                routing: {
+                    send: {
+                        type: 'body',
+                        property: 'message_id',
+                    },
+                },
+            },
+
             // ---- Get Status: Message ID ----
             {
                 displayName: 'Message ID',
@@ -739,7 +930,8 @@ export class WapiFlow implements INodeType {
                 type: 'number',
                 required: true,
                 default: 0,
-                description: 'The numeric message_id returned by a previous Send Text / Send Media response',
+                description:
+                    'Numeric message_id from a previous Send Text or Send Media output (data.message_id). Not used for buttons/polls.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -789,6 +981,22 @@ export class WapiFlow implements INodeType {
                     },
                 ],
                 default: 'me',
+            },
+            {
+                displayName:
+                    '<strong>Verify Credentials</strong> calls <code>/me.php</code> — same as the credential Test button. Use it to confirm the key is bound to a connected instance before sending.',
+                name: 'helpInstanceMe',
+                type: 'notice',
+                default: '',
+                displayOptions: { show: { resource: ['instance'], operation: ['me'] } },
+            },
+            {
+                displayName:
+                    '<strong>List</strong> returns every WhatsApp instance on the tenant (<code>connection_status</code>: connected / connecting / disconnected). Your API key still sends only through the instance it is bound to.',
+                name: 'helpInstanceList',
+                type: 'notice',
+                default: '',
+                displayOptions: { show: { resource: ['instance'], operation: ['list'] } },
             },
         ],
     };

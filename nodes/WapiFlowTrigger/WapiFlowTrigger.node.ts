@@ -35,7 +35,8 @@ export class WapiFlowTrigger implements INodeType {
         group: ['trigger'],
         version: 1,
         subtitle: 'Receive WhatsApp events',
-        description: 'Starts a workflow when WapiFlow receives a WhatsApp event (new message, status update, etc.).',
+        description:
+            'Starts a workflow when WapiFlow receives a WhatsApp event (new message, button tap, status change, connection). Paste the webhook URL into Instances → Webhook events.',
         defaults: {
             name: 'WapiFlow Trigger',
         },
@@ -60,8 +61,7 @@ export class WapiFlowTrigger implements INodeType {
         ],
         properties: [
             {
-                displayName:
-                    'For active workflows, copy the <strong>Production URL</strong> above into WapiFlow dashboard -> Instances -> Webhook events. When testing via "Listen for Test Event", copy the <strong>Test URL</strong> instead. Tick the events you selected below and <strong>Save</strong>.',
+                displayName: 'Copy the <strong>Production URL</strong> (or <strong>Test URL</strong> while listening) into WapiFlow → Instances → Webhook events, tick the same events as below, then <strong>Save</strong>. Helpers on each item: <code>messageText</code>, <code>senderPhone</code>. Voice/image files: do not use <code>audioMessage.url</code> — add a WapiFlow <strong>Decrypt Media</strong> node with <code>{{$json.data.key.ID}}</code>.',
                 name: 'setupNotice',
                 type: 'notice',
                 default: '',
@@ -72,7 +72,7 @@ export class WapiFlowTrigger implements INodeType {
                 type: 'multiOptions',
                 default: ['MESSAGES_UPSERT'],
                 description:
-                    'Which WapiFlow events this workflow should react to. Other events will still hit the webhook but are dropped silently.',
+                    'Events this workflow should run for. Other events still hit n8n but are dropped here. Tick the same events on the WapiFlow instance or nothing will arrive.',
                 options: [
                     {
                         name: 'Connection State Changed',
@@ -107,7 +107,7 @@ export class WapiFlowTrigger implements INodeType {
                 type: 'boolean',
                 default: true,
                 description:
-                    'Whether to drop messages the account sent itself (fromMe=true). Keep on to react only to what contacts write to you.',
+                    'Whether to ignore messages you sent yourself (fromMe=true) so auto-replies do not loop. Turn off only if you need outbound SEND_MESSAGE or your own echoes.',
             },
         ],
     };

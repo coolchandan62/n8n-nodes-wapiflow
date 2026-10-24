@@ -32,7 +32,7 @@ export class WapiFlowApi implements ICredentialType {
             default: 'https://wapiflow.webdescent.com',
             placeholder: 'https://wapiflow.webdescent.com',
             description:
-                'Your WapiFlow installation URL without the trailing /api/v1. Example: https://wapi.acme.com.',
+                'Your WapiFlow site URL only — no /api/v1 and no trailing slash. Example: https://wapiflow.yoursite.com. The node appends /api/v1 automatically.',
             required: true,
         },
         {
@@ -43,7 +43,7 @@ export class WapiFlowApi implements ICredentialType {
             default: '',
             placeholder: 'wf_live_xxxxxxxxxxxx',
             description:
-                'Generated under Developer -> API Keys in your WapiFlow dashboard. Each key is bound to one WhatsApp instance.',
+                'From WapiFlow → Developer → API Keys. Each key is locked to one WhatsApp instance — that is the number this node will send from. Prefix is usually wf_live_.',
             required: true,
         },
         {
@@ -53,7 +53,7 @@ export class WapiFlowApi implements ICredentialType {
             typeOptions: { password: true },
             default: '',
             description:
-                'Shown only once when the key is generated. If you lost it, revoke the key and create a new one.',
+                'Shown only once when the key is created. If you lost it, revoke the key in the dashboard and generate a new pair. Click Test after saving — a green tick means /me.php accepted the key.',
             required: true,
         },
     ];

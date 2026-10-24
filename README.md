@@ -49,6 +49,7 @@ npm install n8n-nodes-wapiflow
 
 | Resource | Operation | What it does |
 |---|---|---|
+| Message | Decrypt Media | POST `/media.php` — decrypt inbound voice/image/video/document; outputs binary + base64 |
 | Message | Send Text | POST a plain-text WhatsApp message (`/messages.php`) |
 | Message | Send Media | POST image / video / audio / document from a public URL (`/messages.php`) |
 | Message | Send Buttons | POST up to 3 quick-reply buttons (`/whatsapp/sendButtons.php`) |
@@ -60,6 +61,8 @@ npm install n8n-nodes-wapiflow
 | Instance | List | GET `/instances.php` — lists all tenant instances with connection status |
 
 Button taps come back on the trigger as `buttonsResponseMessage` (use the button **ID**). Poll answers arrive as `pollUpdateMessage`.
+
+**Inbound media:** the webhook `audioMessage.url` is encrypted. After the trigger, add **Decrypt Media** with WhatsApp Message ID `{{$json.data.key.id}}`, then **Write Binary File**. Do not download the Evolution URL.
 
 **Note:** Buttons / location / contact / poll go through WhatsApp directly and are **not** stored in the WapiFlow chat inbox (same as the dashboard API). Text and media sent via Send Text / Send Media **are** stored.
 
@@ -194,6 +197,7 @@ Once at least one release is published via GitHub Actions with provenance:
 ## Roadmap
 
 - [x] Buttons / Poll / Location / Contact send operations
+- [x] Decrypt Media (inbound voice / image / video / document)
 - [ ] List messages (WhatsApp has largely deprecated them)
 - [ ] Contact resource (find, create, update)
 - [ ] Trigger auto-registration via WapiFlow API (no manual webhook URL copy)
