@@ -1,6 +1,6 @@
 {
     "name": "n8n-nodes-wapiflow",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "n8n community node for WapiFlow — send WhatsApp messages and receive events via your WapiFlow instance.",
     "keywords": [
         "n8n-community-node-package",
