@@ -1,5 +1,5 @@
 {
-    "node": "n8n-nodes-base.wapiFlowTrigger",
+    "node": "n8n-nodes-wapiflow.wapiFlowTrigger",
     "nodeVersion": "1.0",
     "codexVersion": "1.0",
     "categories": [
