@@ -122,8 +122,8 @@ export class WapiFlow implements INodeType {
         displayName: 'WapiFlow',
         name: 'wapiFlow',
         icon: {
-            light: 'file:wapiflow.svg',
-            dark: 'file:wapiflow.svg',
+            light: 'file:wapiflow.png',
+            dark: 'file:wapiflow.png',
         },
         group: ['output'],
         version: 1,

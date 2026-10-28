@@ -29,8 +29,8 @@ export class WapiFlowTrigger implements INodeType {
         displayName: 'WapiFlow Trigger',
         name: 'wapiFlowTrigger',
         icon: {
-            light: 'file:wapiflow.svg',
-            dark: 'file:wapiflow.svg',
+            light: 'file:wapiflow.png',
+            dark: 'file:wapiflow.png',
         },
         group: ['trigger'],
         version: 1,
