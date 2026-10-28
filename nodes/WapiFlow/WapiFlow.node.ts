@@ -121,10 +121,7 @@ export class WapiFlow implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'WapiFlow',
         name: 'wapiFlow',
-        icon: {
-            light: 'file:wapiflow.png',
-            dark: 'file:wapiflow.png',
-        },
+        icon: 'file:wapiflow.svg',
         group: ['output'],
         version: 1,
         subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',

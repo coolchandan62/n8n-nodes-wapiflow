@@ -122,7 +122,7 @@ Open http://localhost:5678 → search the node palette for `WapiFlow` → done.
 ### Iterating
 
 - `npm run dev` runs `tsc --watch` — edit a `.ts` file, save, restart n8n
-- Icon changes need `npm run build` (gulp copies `.svg` / `.png` into `dist/`)
+- Icon changes need `npm run build` (gulp copies `.svg` into `dist/`)
 - Lint before every commit: `npm run lintfix`
 
 ### Troubleshooting

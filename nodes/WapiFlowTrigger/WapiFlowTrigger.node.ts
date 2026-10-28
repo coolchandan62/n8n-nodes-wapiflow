@@ -28,10 +28,7 @@ export class WapiFlowTrigger implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'WapiFlow Trigger',
         name: 'wapiFlowTrigger',
-        icon: {
-            light: 'file:wapiflow.png',
-            dark: 'file:wapiflow.png',
-        },
+        icon: 'file:wapiflow.svg',
         group: ['trigger'],
         version: 1,
         subtitle: 'Receive WhatsApp events',

@@ -17,10 +17,7 @@ export class WapiFlowApi implements ICredentialType {
 
     displayName = 'WapiFlow API';
 
-    icon: Icon = {
-        light: 'file:wapiflow.png',
-        dark: 'file:wapiflow.png',
-    };
+    icon: Icon = 'file:wapiflow.svg';
 
     documentationUrl = 'https://wapiflow.com/docs/n8n#credentials';
 
