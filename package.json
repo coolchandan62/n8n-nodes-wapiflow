@@ -57,7 +57,7 @@
         "eslint-plugin-n8n-nodes-base": "^1.16.3",
         "gulp": "^5.0.0",
         "jsonc-eslint-parser": "^3.3.0",
-        "n8n-workflow": "^1.60.0",
+        "n8n-workflow": "^2.16.0",
         "prettier": "^3.3.2",
         "rimraf": "^5.0.7",
         "typescript": "^5.5.3"
