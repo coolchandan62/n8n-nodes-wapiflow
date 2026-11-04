@@ -80,6 +80,31 @@ Supported events (filtered in-node so you only see what you asked for):
 - `CONNECTION_UPDATE` — WhatsApp connection state change
 - `QRCODE_UPDATED` — new QR code available
 
+Each item also includes chatbot helpers:
+
+| Field | Use for |
+|---|---|
+| `sessionId` | AI Agent **Memory** session key (`{{$json.sessionId}}`) — one history per WhatsApp chat |
+| `chatId` | Same value as `sessionId` (Telegram-style alias) |
+| `senderPhone` | WapiFlow **Send → To** (`{{$json.senderPhone}}`) |
+| `messageText` | Inbound text / button label |
+| `messageId` | WhatsApp message id (quoted reply later) |
+
+### Chatbot + AI Agent (session memory)
+
+Without a per-chat session key, every WhatsApp user shares one Memory bucket and gets mixed replies. Wire it like this:
+
+```text
+WapiFlow Trigger → AI Agent (+ Memory) → WapiFlow Send Text
+```
+
+1. Trigger: subscribe to **New Message Received**, keep **Inbound Only** on
+2. AI Agent Memory: set **Session Key** to `{{$json.sessionId}}`
+3. Send Text **To**: `{{$json.senderPhone}}`
+4. Send Text **Text**: map from the Agent output
+
+DM chats use the customer phone as `sessionId`. Group chats use the group id.
+
 ---
 
 ## Local development

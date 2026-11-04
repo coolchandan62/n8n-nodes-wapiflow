@@ -305,7 +305,7 @@ export class WapiFlow implements INodeType {
             },
             {
                 displayName:
-                    '<strong>Send Text</strong> stores the message in your WapiFlow inbox. Use expressions like <code>{{$json.senderPhone}}</code> from a WapiFlow Trigger. Formatting: *bold* _italic_ ~strike~ ```mono```.',
+                    '<strong>Send Text</strong> stores the message in your WapiFlow inbox. <strong>Chatbot:</strong> Trigger → AI Agent (Memory session key <code>{{$json.sessionId}}</code>) → this node — set <strong>To</strong> to <code>{{$json.senderPhone}}</code> (or <code>{{$json.chatId}}</code>) and <strong>Text</strong> to the Agent output. Formatting: *bold* _italic_ ~strike~ ```mono```.',
                 name: 'helpSendText',
                 type: 'notice',
                 default: '',
@@ -368,7 +368,8 @@ export class WapiFlow implements INodeType {
                 required: true,
                 default: '',
                 placeholder: '919876543210',
-                description: 'Recipient WhatsApp number, digits only with country code (e.g. 919876543210). Indian 10-digit mobiles get 91 added automatically. From a Trigger use {{$JSON.senderPhone}}.',
+                description:
+                    'Recipient WhatsApp number, digits only with country code (e.g. 919876543210). Indian 10-digit mobiles get 91 added automatically. From a Trigger use {{$JSON.senderPhone}} or {{$JSON.chatId}}.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -391,7 +392,8 @@ export class WapiFlow implements INodeType {
                 required: true,
                 default: '',
                 placeholder: '919876543210',
-                description: 'Recipient WhatsApp number, digits only with country code (e.g. 919876543210). Indian 10-digit mobiles get 91 added automatically. From a Trigger use {{$JSON.senderPhone}}.',
+                description:
+                    'Recipient WhatsApp number, digits only with country code (e.g. 919876543210). Indian 10-digit mobiles get 91 added automatically. From a Trigger use {{$JSON.senderPhone}} or {{$JSON.chatId}}.',
                 displayOptions: {
                     show: {
                         resource: ['message'],
@@ -416,7 +418,8 @@ export class WapiFlow implements INodeType {
                 typeOptions: {
                     rows: 4,
                 },
-                description: 'Message body shown in WhatsApp. Supports *bold*, _italic_, ~strike~ and ```mono```. From a Trigger you can reply with {{$JSON.messageText}}.',
+                description:
+                    'Message body shown in WhatsApp. Supports *bold*, _italic_, ~strike~ and ```mono```. In a chatbot, map this from the AI Agent output — not from {{$JSON.messageText}} (that is the inbound user text).',
                 displayOptions: {
                     show: {
                         resource: ['message'],

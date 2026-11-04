@@ -9,6 +9,38 @@ import {
 } from 'n8n-workflow';
 
 /**
+ * Strip WhatsApp JID suffixes (`@s.whatsapp.net`, `@g.us`, `@lid`, …)
+ * so chat/session keys stay stable for AI Memory and Send "To" fields.
+ */
+function normalizeWhatsAppId(jid: string): string {
+    return String(jid ?? '')
+        .replace(/@.+$/, '')
+        .trim();
+}
+
+/**
+ * Pull plain text from common inbound message shapes (text, caption, buttons, lists).
+ */
+function extractMessageText(msgObj: IDataObject): string {
+    const extMsg = (msgObj.extendedTextMessage ?? {}) as IDataObject;
+    const btn = (msgObj.buttonsResponseMessage ?? {}) as IDataObject;
+    const list = (msgObj.listResponseMessage ?? {}) as IDataObject;
+    const templateBtn = (msgObj.templateButtonReplyMessage ?? {}) as IDataObject;
+
+    return String(
+        msgObj.conversation ??
+            extMsg.text ??
+            msgObj.caption ??
+            btn.selectedDisplayText ??
+            btn.selectedButtonId ??
+            list.title ??
+            templateBtn.selectedDisplayText ??
+            templateBtn.selectedId ??
+            '',
+    ).trim();
+}
+
+/**
  * WapiFlow trigger node.
  *
  * n8n hosts a public webhook URL for this node. The user pastes that URL
@@ -23,6 +55,9 @@ import {
  * The node applies an in-process event filter so a single workflow doesn't
  * get flooded with every event type when the user only cares about new
  * inbound messages.
+ *
+ * Each item also gets chatbot helpers: `sessionId` / `chatId` (for AI Agent
+ * Memory), `senderPhone` (for Send → To), `messageId`, and `messageText`.
  */
 export class WapiFlowTrigger implements INodeType {
     description: INodeTypeDescription = {
@@ -33,7 +68,7 @@ export class WapiFlowTrigger implements INodeType {
         version: 1,
         subtitle: 'Receive WhatsApp events',
         description:
-            'Starts a workflow when WapiFlow receives a WhatsApp event (new message, button tap, status change, connection). Paste the webhook URL into Instances → Webhook events.',
+            'Starts a workflow when WapiFlow receives a WhatsApp event (new message, button tap, status change, connection). Paste the webhook URL into Instances → Webhook events. Emits sessionId/chatId for AI Agent Memory.',
         defaults: {
             name: 'WapiFlow Trigger',
         },
@@ -58,7 +93,8 @@ export class WapiFlowTrigger implements INodeType {
         ],
         properties: [
             {
-                displayName: 'Copy the <strong>Production URL</strong> (or <strong>Test URL</strong> while listening) into WapiFlow → Instances → Webhook events, tick the same events as below, then <strong>Save</strong>. Helpers on each item: <code>messageText</code>, <code>senderPhone</code>. Voice/image files: do not use <code>audioMessage.url</code> — add a WapiFlow <strong>Decrypt Media</strong> node with <code>{{$json.data.key.ID}}</code>.',
+                displayName:
+                    'Copy the <strong>Production URL</strong> (or <strong>Test URL</strong> while listening) into WapiFlow → Instances → Webhook events, tick the same events as below, then <strong>Save</strong>. <strong>Chatbot:</strong> Trigger → AI Agent (Memory session key <code>{{$json.sessionId}}</code>) → Send Text (To <code>{{$json.senderPhone}}</code>, text = Agent output). Helpers: <code>sessionId</code>/<code>chatId</code>, <code>senderPhone</code>, <code>messageText</code>, <code>messageId</code>. Voice/image: use <strong>Decrypt Media</strong> with <code>{{$json.data.key.ID}}</code> — do not download <code>audioMessage.url</code>.',
                 name: 'setupNotice',
                 type: 'notice',
                 default: '',
@@ -154,21 +190,40 @@ export class WapiFlowTrigger implements INodeType {
             }
         }
 
-        // Convenience shortcuts for easier mapping in n8n workflows
+        // Convenience shortcuts for chatbot / AI Agent workflows.
+        // sessionId + chatId = conversation key (DM phone or group id).
+        // senderPhone = who wrote the message (participant in groups, else remoteJid).
         const rawDataForHelper = body.data;
-        const dataObj = (Array.isArray(rawDataForHelper) ? rawDataForHelper[0] : rawDataForHelper ?? {}) as IDataObject;
+        const dataObj = (
+            Array.isArray(rawDataForHelper) ? rawDataForHelper[0] : (rawDataForHelper ?? {})
+        ) as IDataObject;
         const msgObj = (dataObj.message ?? {}) as IDataObject;
-        const extMsg = (msgObj.extendedTextMessage ?? {}) as IDataObject;
         const keyObj = (dataObj.key ?? {}) as IDataObject;
 
-        const extractedText = String(msgObj.conversation ?? extMsg.text ?? msgObj.caption ?? '');
-        const extractedSender = String(keyObj.remoteJid ?? body.sender ?? '').replace(/@s\\.whatsapp\\.net|@g\\.us/g, '');
+        const remoteJid = String(keyObj.remoteJid ?? body.sender ?? '');
+        const participant = String(keyObj.participant ?? '');
+        const chatId = normalizeWhatsAppId(remoteJid);
+        const senderPhone = normalizeWhatsAppId(participant || remoteJid);
+        const messageId = String(keyObj.id ?? '').trim();
+        const messageText = extractMessageText(msgObj);
 
-        if (extractedText && !body.messageText) {
-            body.messageText = extractedText;
+        if (messageText && !body.messageText) {
+            body.messageText = messageText;
         }
-        if (extractedSender && !body.senderPhone) {
-            body.senderPhone = extractedSender;
+        if (senderPhone && !body.senderPhone) {
+            body.senderPhone = senderPhone;
+        }
+        if (chatId) {
+            if (!body.chatId) {
+                body.chatId = chatId;
+            }
+            if (!body.sessionId) {
+                // Same value as chatId — primary key for AI Agent Memory sessionKey.
+                body.sessionId = chatId;
+            }
+        }
+        if (messageId && !body.messageId) {
+            body.messageId = messageId;
         }
 
         return {
