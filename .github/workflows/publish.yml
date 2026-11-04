@@ -81,8 +81,11 @@ jobs:
           node-version: 'lts/*'
           cache: 'npm'
 
+      # isolated-vm (via n8n-workflow) is not needed to build/publish this
+      # community node. Skip scripts and fall back to npm install if npm ci
+      # fails (same pattern as ci.yml) so runner image changes don't block releases.
       - name: Install dependencies
-        run: 'npm ci'
+        run: npm ci --ignore-scripts || npm install --no-audit --ignore-scripts
 
       - name: Release
         # Publishes to npm with a provenance attestation (requires id-token: write above).
